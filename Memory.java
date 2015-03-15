@@ -1,0 +1,536 @@
+import javax.swing.JOptionPane;
+
+public class Memory
+   {
+   private String name1; // p1Name
+   private String name2; // p2Name
+   private int[][] table; // 2D array w/ values
+   private int[] tableCheck; // array to check table values
+   private int cardNum; // card number for tableCheck array
+   private String[][] tableViewer; // 2D array to print out "xx" or "--"
+   private int tableHeight; // height of table
+   private int tableWidth; // width of table
+   private int p1Points; // # of matches for p1
+   private int p2Points; // # of matches for p2
+   private int guess1R; // row for guess of first card
+   private int guess1C; // column for guess of first card
+   private int guess2R; // row for guess of second card
+   private int guess2C; // column for guess of second card
+   private boolean p1Turn; // whose turn it is
+   private int matchesLeft; // # of matches available to make
+   private boolean endGameEarly; // if one person will automatically win
+   
+   public Memory( int hei, int wid)
+      {
+      table = new int[hei][wid];
+      tableCheck = new int[hei*wid];
+      tableViewer = new String[hei][wid];
+      tableHeight = hei;
+      tableWidth = wid;
+      p1Points = 0;
+      p2Points = 0;
+      resetGuess1();
+      resetGuess2();
+      } // end constructor
+      
+   public void setNames( String p1, String p2 )
+      {
+      name1 = p1;
+      name2 = p2;
+      if( p1.equals( p2 ) )
+         {
+         name1 = p1 + "1";
+         name2 = p2 + "2";
+         } // end if names are the same
+      } // end method setNames
+   public String getName1()
+      {
+      return name1;
+      } // end method getName1()
+   public String getName2()
+      {
+      return name2;
+      } // end method getName2()
+      
+   public void setTurn( String name )
+      {
+      if( name.equals( name1 ) )
+         {
+         p1Turn = true;
+         } // end if
+      else
+         {
+         p1Turn = false;
+         } // end else
+      } // end method setTurn()
+      
+   public void setCards()
+      {
+      System.out.println( "Setting up Game and Table..." );
+      cardNum = 0;
+      for( int h = 0; h < tableHeight; h++ )
+         {
+         for( int w = 0; w < tableWidth; w++ )
+            {
+            table[h][w] = (int) (Math.random() * (tableHeight*tableWidth / 2) ) + 1;
+            int cardCheck = 0;
+            tableCheck[cardNum] = table[h][w];
+            for( int index = 0; index < cardNum; index++ )
+               {
+               tableCheck[cardNum] = table[h][w];
+               if( tableCheck[index] == tableCheck[cardNum] )
+                  {
+                  cardCheck++;
+                  } // end if
+               if( cardCheck == 2 )
+                  {
+                  table[h][w] = (int) (Math.random() * (tableHeight*tableWidth / 2) ) + 1;
+                  index = -1;
+                  cardCheck = 0;
+                  } // end if
+               } // end for
+            cardNum++;
+            
+            
+            tableViewer[h][w] = "xx";
+            } // end for
+         } // end for
+      } // end method SetCards
+   
+   private void printTable()
+      {
+      System.out.println( (char) 12 );
+      printScore();
+      System.out.println();
+      for( int h = -1; h < tableHeight; h++ )
+         {
+         if( h < 9 )
+            {
+            System.out.print( h+1 + "  | " );
+            } // end if
+         else
+            {
+            System.out.print( h+1 + " | " );
+            } // end else
+         for( int w = 0; w < tableWidth; w++ )
+            {
+            if( h == -1 )
+               {
+               System.out.print( w+1 + "  " );
+               if( w < 10 )
+                  {
+                  System.out.print( " " );
+                  } // end if
+               } // end if set-up
+            else
+               {
+               if( guess1R == h && guess1C == w || guess2R == h && guess2C == w )
+                  {
+                  System.out.print( table[h][w] + "  " );
+                  if( table[h][w] < 10 )
+                     {
+                     System.out.print( " " );
+                     } // end if spacing
+                  } // end if guess
+               else
+                  {
+                  System.out.print( tableViewer[h][w] + "  " );
+                  } // end else
+               } // end else
+            } // end for-columns
+         if( h == -1 )
+            {
+            System.out.println();
+            System.out.print( "---|" );
+            for( int w = 0; w < tableWidth; w++ )
+               {
+               System.out.print( "----" );
+               } // end for-w
+            } // end if
+         System.out.println( );
+         } // end for-rows
+      System.out.println();
+      printTurn();
+      System.out.println();
+      System.out.println( "Matches left to make: " + matchesLeft );
+      System.out.println( "\n\nType 'help' for game instructions and info.\n" );
+      } // end method printCards()
+   
+   private void printCards()
+      {
+      System.out.println( (char) 12 );
+      printScore();
+      System.out.println();
+      for( int h = -1; h < tableHeight; h++ )
+         {
+         if( h < 9 )
+            {
+            System.out.print( h+1 + "  | " );
+            } // end if
+         else
+            {
+            System.out.print( h+1 + " | " );
+            } // end else
+         for( int w = 0; w < tableWidth; w++ )
+            {
+            if( h == -1 )
+               {
+               System.out.print( w+1 + "  " );
+               if( w < 10 )
+                  {
+                  System.out.print( " " );
+                  } // end if
+               } // end if
+            else
+               {
+               if( tableViewer[h][w].equals( "--" ) )
+                  {
+                  System.out.print( tableViewer[h][w] + "  " );
+                  } // end if
+               else
+                  {
+                  System.out.print( table[h][w] + "  " );
+                  if( table[h][w] < 10 )
+                     {
+                     System.out.print( " " );
+                     } // end if spacing
+                  } // end else
+               } // end else
+            } // end for-columns
+         if( h == -1 )
+            {
+            System.out.println();
+            System.out.print( "---|" );
+            for( int w = 0; w < tableWidth; w++ )
+               {
+               System.out.print( "----" );
+               } // end for-w
+            } // end if
+         System.out.println( );
+         } // end for-rows
+      System.out.println();
+      printTurn();
+      System.out.println();
+      System.out.println( "Matches left to make: " + matchesLeft );
+      System.out.println( "\n\nType 'help' for game instructions and info.\n" );
+      } // end method printTable()
+   
+   private void printScore()
+      {
+      System.out.println( name1 + ": " + p1Points + "\t\t" + name2 + ": " + p2Points );
+      } // end method printScore()
+   private void printTurn()
+      {
+      if( p1Turn )
+         {
+         System.out.println( "Player " + name1 + "'s Turn..." );
+         } // end if p1turn
+      else
+         {
+         System.out.println( "Player " + name2 + "'s Turn..." );
+         } // end else
+      } // end method printTurn()
+   
+   
+   
+   
+   public void playGame()
+      {
+      matchesLeft = MatchesLeft();
+      printTable();
+      while( matchesLeft > 0 )
+         {
+         guessOne();
+         printTable();
+         printGuess1();
+         guessTwo();
+         printTable();
+         printGuess2();
+         // EasterEgg - done
+         // helpMenu method - done
+         checkGuess();
+         resetGuess1();
+         resetGuess2();
+         switchTurn();
+         matchesLeft = MatchesLeft();
+         // endGameEarly method, possible to end the game early - at the end of code - NOT DONE
+         endGameEarly();
+         if( endGameEarly )
+            {
+            break;
+            } // end if
+         printTable();
+         } // end while game is not over
+      } // end method playGame()
+      
+   public void printWinner()
+      {
+      System.out.println( (char) 12 );
+      System.out.println( "game over... all the matches have been found!\n:D" );
+      System.out.println( "\n\n\n" + "And the winner is..........\n\n:O\n" );
+      if( p1Points > p2Points )
+         {
+         System.out.println( name1 + "!!!\nWith the final score being....." );
+         } // end p1 win
+      if( p1Points < p2Points )
+         {
+         System.out.println( name2 + "!!!\nWith the final score being....." );
+         } // end p2 win
+      if( p1Points == p2Points )
+         {
+         System.out.println( "\n\nThere is no winner...!...\n it's a tie!!....\n-_______-" + 
+                             "\nWith the final score being....." );
+         } // end tieGame
+      printScore();
+      } // end method printWinner()
+   
+   private int MatchesLeft()
+      {
+      int matches = 0;
+      for( int h = 0; h < tableHeight; h++ )
+         {
+         for( int w = 0; w < tableWidth; w++ )
+            {
+            if( tableViewer[h][w].equals( "xx" ) )
+               {
+               matches++;
+               } // end if
+            } // end for w
+         } // end for h
+      matches = matches / 2;
+      return matches;
+      } // end method MatchesLeft()
+      
+   private void guessOne()
+      {
+      while( guess1R < 0 || guess1R >= tableHeight || guess1C < 0 || guess1C >= tableWidth )
+         {
+         String guessR = JOptionPane.showInputDialog( "Input row of First Guess...\n" + 
+                           "( 1 ~ " + tableHeight + " )" );
+         if( guessR.equals( "help" ) )
+            {
+            helpMenu();
+            resetGuess1();
+            guessOne();
+            break;
+            } // end if help
+         if( guessR.equals( "Easter" ) )
+            {
+            printCards();
+            resetGuess1();
+            guessOne();
+            break;
+            } // end EasterEgg
+         if( guessR.equals( "" ) )
+            {
+            resetGuess1();
+            guessOne();
+            break;
+            } // end if nothing
+         else
+            {
+            guess1R = Integer.parseInt( guessR ) - 1;
+            } // end else
+         
+         String guessC = JOptionPane.showInputDialog( "Input column of First Guess...\n" + 
+                           "( 1 ~ " + tableWidth + " )" );
+         if( guessC.equals( "help" ) )
+            {
+            helpMenu();
+            resetGuess1();
+            guessOne();
+            break;
+            } // end if help
+         if( guessC.equals( "Easter" ) )
+            {
+            printCards();
+            resetGuess1();
+            guessOne();
+            break;
+            } // end EasterEgg
+         if( guessC.equals( "" ) )
+            {
+            resetGuess1();
+            guessOne();
+            break;
+            } // end if nothing
+         else
+            {
+            guess1C = Integer.parseInt( guessC ) - 1;
+            } // end else
+            
+         if( guess1R < 0 || guess1R >= tableHeight || guess1C < 0 || guess1C >= tableWidth )
+            {
+            JOptionPane.showMessageDialog( null, "The row/column you input was not within the right parameters..."
+                                       + "\nPlease input them again" );
+            } // end if
+         } // end while
+      if( tableViewer[guess1R][guess1C].equals( "--" ) )
+         {
+         resetGuess1();
+         JOptionPane.showMessageDialog( null, "That card has already been matched! :O" +
+                                          "\nPlease input your row and column again" );
+         guessOne();
+         } // end if
+      } // end method guessOne()
+   private void printGuess1()
+      {
+      JOptionPane.showMessageDialog( null, "The card in that location is...\n" + table[guess1R][guess1C] );
+      } // end method printGuess1()
+   
+   private void guessTwo()
+      {
+      while( guess2R < 0 || guess2R >= tableHeight || guess2C < 0 || guess2C >= tableWidth )
+         {
+         String guessR = JOptionPane.showInputDialog( "Input row of Second Guess...\n" + 
+                           "( 1 ~ " + tableHeight + " )" );
+         if( guessR.equals( "help" ) )
+            {
+            helpMenu();
+            resetGuess2();
+            guessTwo();
+            break;
+            } // end if help
+         if( guessR.equals( "Easter" ) )
+            {
+            printCards();
+            resetGuess2();
+            guessTwo();
+            break;
+            } // end EasterEgg
+         if( guessR.equals( "" ) )
+            {
+            resetGuess2();
+            guessTwo();
+            break;
+            } // end if nothing
+         else
+            {
+            guess2R = Integer.parseInt( guessR ) - 1;
+            } // end else
+         
+         String guessC = JOptionPane.showInputDialog( "Input column of Second Guess...\n" + 
+                           "( 1 ~ " + tableWidth + " )" );
+         if( guessC.equals( "help" ) )
+            {
+            helpMenu();
+            resetGuess2();
+            guessTwo();
+            break;
+            } // end if help
+         if( guessC.equals( "Easter" ) )
+            {
+            printCards();
+            resetGuess2();
+            guessTwo();
+            break;
+            } // end EasterEgg
+         if( guessC.equals( "" ) )
+            {
+            resetGuess2();
+            guessTwo();
+            break;
+            } // end if nothing
+         else
+            {
+            guess2C = Integer.parseInt( guessC ) - 1;
+            } // end else
+         
+         if( guess2R < 0 || guess2R >= tableHeight || guess2C < 0 || guess2C >= tableWidth )
+            {
+            JOptionPane.showMessageDialog( null, "The row/column you input was not within the right parameters..."
+                                       + "\nPlease input them again" );
+            } // end if
+         if( guess1R == guess2R && guess1C == guess2C )
+            {
+            JOptionPane.showMessageDialog( null, "That was already your first guess!!\n" + 
+                                           "You can't guess there again!\n>:(" );
+            resetGuess2();
+            guessTwo();
+            break;
+            } // end if sameGuessTwice
+         } // end while
+      if( tableViewer[guess2R][guess2C].equals( "--" ) )
+         {
+         resetGuess2();
+         JOptionPane.showMessageDialog( null, "That card has already been matched! :O" +
+                                          "\nPlease input your row and column again" );
+         guessTwo();
+         } // end if
+      } // end method guessTwo()
+   private void printGuess2()
+      {
+      JOptionPane.showMessageDialog( null, "The card in that location is...\n" + table[guess2R][guess2C] );
+      } // end method printGuess1()
+   
+   private void checkGuess()
+      {
+      if( table[guess1R][guess1C] == table[guess2R][guess2C] )
+         {
+         tableViewer[guess1R][guess1C] = "--";
+         tableViewer[guess2R][guess2C] = "--";
+         if( p1Turn == true )
+            {
+            p1Points++;
+            JOptionPane.showMessageDialog( null, name1 + ", \nYou got a Match!!\n:D" + 
+                                          "\nYou get to go again " + name1 + "!" );
+            } // end if p1Turn point
+         if( p1Turn == false )
+            {
+            p2Points++;
+            JOptionPane.showMessageDialog( null, name2 + ", \nYou got a Match!!\n:D" + 
+                                          "\nYou get to go again " + name2 + "!" );
+            } // end if p2Turn point
+         p1Turn = !p1Turn;
+         } // end if match
+      else
+         {
+         JOptionPane.showMessageDialog( null, "Sorry...\nNo Match.\n:(" );
+         } // end else noMatch
+      
+      } // end method checkGuess()
+      
+   private void resetGuess1()
+      {
+      guess1R = -1;
+      guess1C = -1;
+      } // end method resetGuess1
+   private void resetGuess2()
+      {
+      guess2R = -1;
+      guess2C = -1;
+      } // end method resetGuess2()
+   
+   private void switchTurn()
+      {
+      p1Turn = !p1Turn;
+      } // end method switchTurn()
+   
+   private void helpMenu()
+      {
+      System.out.println( (char) 12 );
+      System.out.println( "Memory Matching Game\nProgrammed by Russell Miller\n\n\n\n\n" );
+      System.out.println( "The goal of the game is to get more matches than your opponent." );
+      System.out.println( "To get a match, input the row (horizontal) \n" + 
+                          "   and column (vertical) of the card you want to guess." );
+      System.out.println( "You have to do this for 2 cards..." );
+      System.out.println( "When you get a match, you get to guess again! :)" );
+      System.out.println( "\nThe points are on top, then the table, then whose turn, \n" + 
+                          "then how many matches there are left to make." );
+      System.out.println( "\n\nThere is also a hidden EasterEgg within the game. \n:P\n" + 
+                          "Have fun!\n\n\n" );
+      
+      JOptionPane.showMessageDialog( null, "Here's your help info\n:)\nClick 'OK' to return to game" );
+      printTable();
+      } // end method helpMenu()
+   
+   private void endGameEarly()
+      {
+      if( p1Points > p2Points + matchesLeft )
+         {
+         endGameEarly = true;
+         } // end if
+         
+         
+      } // end method endGameEarly
+   } // end class Memory
